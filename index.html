@@ -3,32 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎤 Voice Banking Assistant</title>
+    <title>🎤 Voice Banking Assistant v2.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
+        
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
-            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
         }
-        h1 {
+        
+        /* Header */
+        .header {
             text-align: center;
-            color: #333;
             margin-bottom: 30px;
-            font-size: 28px;
         }
+        
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .version {
+            color: #666;
+            font-size: 14px;
+            background: #e3f2fd;
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        
+        /* Status Bar */
         .status {
             text-align: center;
             padding: 15px;
@@ -36,103 +52,672 @@
             border-radius: 10px;
             background: #f0f0f0;
             font-weight: 500;
-        }
-        .status.recording { background: #ffebee; color: #c62828; }
-        .status.processing { background: #fff3e0; color: #e65100; }
-        .status.success { background: #e8f5e9; color: #2e7d32; }
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin: 30px 0;
-        }
-        button {
-            flex: 1;
-            padding: 15px;
             font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
             transition: all 0.3s;
         }
-        .record-btn {
-            background: #f44336;
-            color: white;
-        }
-        .record-btn:hover { background: #d32f2f; transform: translateY(-2px); }
-        .record-btn.recording {
-            background: #c62828;
-            animation: pulse 1.5s infinite;
-        }
+        
+        .status.idle { background: #e8f5e9; color: #2e7d32; }
+        .status.recording { background: #ffebee; color: #c62828; animation: pulse 1.5s infinite; }
+        .status.processing { background: #fff3e0; color: #e65100; }
+        .status.success { background: #e8f5e9; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
-        .test-btn {
-            background: #2196f3;
+        
+        /* Progress Steps */
+        .progress-container {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            flex: 1;
+        }
+        
+        .progress-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 15px;
+            font-size: 20px;
+            color: #999;
+        }
+        
+        .step-icon {
+            font-size: 28px;
+            filter: grayscale(1);
+            transition: all 0.3s;
+        }
+        
+        .progress-step.active .step-icon {
+            filter: grayscale(0);
+            transform: scale(1.2);
+        }
+        
+        .step-name {
+            font-size: 13px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .step-time {
+            font-weight: bold;
+            color: #999;
+            font-size: 16px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .progress-step.active .step-time {
+            color: #2196f3;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .step-time.completed {
+            color: #4caf50 !important;
+        }
+        
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        button {
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .record-btn {
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
             color: white;
         }
-        .test-btn:hover { background: #1976d2; transform: translateY(-2px); }
-        .response {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-radius: 10px;
-            min-height: 100px;
+        
+        .record-btn.recording {
+            background: linear-gradient(135deg, #c62828 0%, #ad1457 100%);
+            animation: pulse 1.5s infinite;
         }
+        
+        .test-btn {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+        }
+        
+        .clear-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            grid-column: span 2;
+        }
+        
+        /* Main Content */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Response Box */
+        .response-box {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+        }
+        
+        .response-box h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            margin-left: 20px;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .bot-message {
+            background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+            margin-right: 20px;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .message-text {
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .message-confidence {
+            font-size: 11px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        .confidence-high { color: #4caf50; }
+        .confidence-medium { color: #ff9800; }
+        .confidence-low { color: #f44336; }
+        
+        /* Entities */
+        .entities-container {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .entities-container h4 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .entity-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .entity-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .entity-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .entity-badge strong {
+            margin-right: 5px;
+            opacity: 0.7;
+        }
+        
+        .entity-badge[data-type="nombre"] { 
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #e65100;
+        }
+        .entity-badge[data-type="tipo_documento"] { 
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            color: #7b1fa2;
+        }
+        .entity-badge[data-type="numero_documento"] { 
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+        }
+        .entity-badge[data-type="tipo_cuenta"] { 
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+            color: #0277bd;
+        }
+        .entity-badge[data-type="numero_cuenta"] { 
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            color: #c2185b;
+        }
+        .entity-badge[data-type="monto"] { 
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            color: #f57f17;
+        }
+        
+        /* Examples */
+        .examples {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .examples h4 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .examples ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .examples li {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .examples li:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+        }
+        
+        /* Audio Player */
         audio {
             width: 100%;
-            margin-top: 15px;
+            margin: 15px 0;
+            border-radius: 25px;
         }
+        
+        /* Metadata */
         .metadata {
-            margin-top: 15px;
-            padding: 15px;
             background: #263238;
             color: #aed581;
-            border-radius: 5px;
+            border-radius: 12px;
+            padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
             max-height: 300px;
             overflow-y: auto;
             white-space: pre-wrap;
+            line-height: 1.6;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .metadata::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .metadata::-webkit-scrollbar-thumb {
+            background: #4caf50;
+            border-radius: 4px;
+        }
+        
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196f3;
+            display: block;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+        
+        /* Conversation History */
+        .history-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 12px;
+        }
+        
+        .history-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .history-container::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            border-radius: 4px;
+        }
+        
+        .history-empty {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196f3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toggle Buttons */
+        .toggle-section {
+            background: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toggle-section:hover {
+            background: #d0d0d0;
+        }
+        
+        .toggle-icon {
+            transition: transform 0.3s;
+        }
+        
+        .toggle-section.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* Health Indicator */
+        .health-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .health-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .health-dot.offline {
+            background: #f44336;
+            animation: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎤 Voice Banking Assistant</h1>
-        
-        <div class="status" id="status">Listo para grabar</div>
+    <!-- Health Indicator -->
+    <div class="health-indicator">
+        <div class="health-dot" id="healthDot"></div>
+        <span id="healthText">Conectando...</span>
+    </div>
 
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎤 Voice Banking Assistant</h1>
+            <span class="version">v2.0 - Optimizado con Multi-Modelo LLM</span>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status idle" id="status">✅ Listo para grabar</div>
+
+        <!-- Progress Steps -->
+        <div class="progress-container">
+            <div class="progress-step" id="stepSTT">
+                <span class="step-icon">🎤</span>
+                <span class="step-name">STT</span>
+                <span class="step-time" id="sttTime">-</span>
+            </div>
+            <div class="progress-step" id="stepRasa">
+                <span class="step-icon">🧠</span>
+                <span class="step-name">Rasa</span>
+                <span class="step-time" id="rasaTime">-</span>
+            </div>
+            <div class="progress-step" id="stepLLM">
+                <span class="step-icon">✨</span>
+                <span class="step-name">LLM</span>
+                <span class="step-time" id="llmTime">-</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
         <div class="controls">
             <button class="record-btn" id="recordBtn">🎙️ Grabar</button>
             <button class="test-btn" id="testBtn">💬 Texto</button>
+            <button class="clear-btn" id="clearBtn">🗑️ Limpiar Historial</button>
         </div>
 
-        <div class="response" id="response">
-            <p><strong>Ejemplos de consultas:</strong></p>
-            <p>• "Quiero consultar mi saldo de ahorros"</p>
-            <p>• "Transferir 50000 pesos a la cuenta corriente"</p>
-            <p>• "Pagar el servicio de luz"</p>
+        <!-- Stats -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <span class="stat-value" id="statTotal">-</span>
+                <span class="stat-label">Tiempo Total</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="statRequests">0</span>
+                <span class="stat-label">Consultas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="statAvg">-</span>
+                <span class="stat-label">Promedio</span>
+            </div>
         </div>
 
-        <audio id="audioPlayer" controls style="display:none;"></audio>
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Left Column: Conversation -->
+            <div class="response-box">
+                <h3>💬 Conversación</h3>
+                <div class="history-container" id="history">
+                    <div class="history-empty">
+                        <p>👋 ¡Hola! Empieza una conversación</p>
+                    </div>
+                </div>
+                <audio id="audioPlayer" controls style="display:none;"></audio>
+            </div>
+
+            <!-- Right Column: Details -->
+            <div class="response-box">
+                <h3>📊 Detalles</h3>
+                
+                <!-- Entities -->
+                <div class="entities-container" id="entitiesContainer" style="display:none;">
+                    <h4>🏷️ Entidades Detectadas</h4>
+                    <div class="entity-badges" id="entityBadges"></div>
+                </div>
+
+                <!-- Examples -->
+                <div class="examples">
+                    <h4>💡 Ejemplos de consultas:</h4>
+                    <ul id="examplesList">
+                        <li data-example="crear contacto Freddy Pulido cédula 123456 cuenta de ahorros 789012">
+                            📝 Crear contacto completo
+                        </li>
+                        <li data-example="consultar saldo de mi cuenta de ahorros">
+                            💰 Consultar saldo
+                        </li>
+                        <li data-example="transferir 50000 pesos a Juan cuenta 456789">
+                            💸 Transferir dinero
+                        </li>
+                        <li data-example="pagar servicio de luz">
+                            🔌 Pagar servicio
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metadata Toggle -->
+        <div class="toggle-section" id="metadataToggle">
+            <span>🔍 Ver Metadata JSON</span>
+            <span class="toggle-icon">▼</span>
+        </div>
         <div class="metadata" id="metadata" style="display:none;"></div>
     </div>
 
     <script>
+        // Configuration
         const API_URL = 'https://voice.insoftcol.com.co';
+        
+        // DOM Elements
         const recordBtn = document.getElementById('recordBtn');
         const testBtn = document.getElementById('testBtn');
+        const clearBtn = document.getElementById('clearBtn');
         const status = document.getElementById('status');
-        const response = document.getElementById('response');
+        const history = document.getElementById('history');
         const audioPlayer = document.getElementById('audioPlayer');
         const metadata = document.getElementById('metadata');
-
+        const metadataToggle = document.getElementById('metadataToggle');
+        const entitiesContainer = document.getElementById('entitiesContainer');
+        const entityBadges = document.getElementById('entityBadges');
+        const healthDot = document.getElementById('healthDot');
+        const healthText = document.getElementById('healthText');
+        
+        // Progress Steps
+        const stepSTT = document.getElementById('stepSTT');
+        const stepRasa = document.getElementById('stepRasa');
+        const stepLLM = document.getElementById('stepLLM');
+        const sttTime = document.getElementById('sttTime');
+        const rasaTime = document.getElementById('rasaTime');
+        const llmTime = document.getElementById('llmTime');
+        
+        // Stats
+        const statTotal = document.getElementById('statTotal');
+        const statRequests = document.getElementById('statRequests');
+        const statAvg = document.getElementById('statAvg');
+        
+        // State
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
-
+        let requestCount = 0;
+        let totalTime = 0;
+        
+        // Initialize
+        initApp();
+        
+        async function initApp() {
+            checkHealth();
+            setInterval(checkHealth, 30000); // Check every 30s
+            
+            // Examples click handler
+            document.getElementById('examplesList').addEventListener('click', (e) => {
+                const li = e.target.closest('li');
+                if (li) {
+                    const example = li.dataset.example;
+                    sendTextMessage(example);
+                }
+            });
+            
+            // Metadata toggle
+            metadataToggle.addEventListener('click', () => {
+                const isOpen = metadata.style.display !== 'none';
+                metadata.style.display = isOpen ? 'none' : 'block';
+                metadataToggle.classList.toggle('open');
+            });
+        }
+        
+        // Health Check
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_URL}/health`);
+                if (res.ok) {
+                    healthDot.classList.remove('offline');
+                    healthText.textContent = 'Sistema Online';
+                } else {
+                    healthDot.classList.add('offline');
+                    healthText.textContent = 'Sistema Offline';
+                }
+            } catch (error) {
+                healthDot.classList.add('offline');
+                healthText.textContent = 'Sin Conexión';
+            }
+        }
+        
+        // Recorder
         async function initRecorder() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -148,49 +733,51 @@
                     await sendAudio(audioBlob);
                 };
                 
-                status.textContent = '✅ Micrófono listo';
-                status.className = 'status success';
+                updateStatus('✅ Micrófono listo', 'success');
             } catch (error) {
-                status.textContent = '❌ Error: No se puede acceder al micrófono';
-                status.className = 'status';
+                updateStatus('❌ Error: No se puede acceder al micrófono', 'error');
                 console.error(error);
             }
         }
-
+        
         recordBtn.addEventListener('click', async () => {
             if (!mediaRecorder) {
                 await initRecorder();
             }
-
+            
             if (!isRecording) {
                 audioChunks = [];
                 mediaRecorder.start();
                 isRecording = true;
                 recordBtn.textContent = '⏹️ Detener';
                 recordBtn.classList.add('recording');
-                status.textContent = '🔴 Grabando... Habla ahora';
-                status.className = 'status recording';
+                updateStatus('🔴 Grabando... Habla ahora', 'recording');
+                resetProgress();
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
                 recordBtn.textContent = '🎙️ Grabar';
                 recordBtn.classList.remove('recording');
-                status.textContent = '⏳ Procesando...';
-                status.className = 'status processing';
+                updateStatus('⏳ Procesando...', 'processing');
             }
         });
-
+        
+        // Send Audio
         async function sendAudio(audioBlob) {
             const formData = new FormData();
+            const senderId = 'web_user_' + Date.now();
             formData.append('audio', audioBlob, 'recording.wav');
-            formData.append('sender', 'web_user_' + Date.now());
-
+            formData.append('sender', senderId);
+            
+            const startTime = Date.now();
+            activateStep(stepSTT);
+            
             try {
                 const res = await fetch(`${API_URL}/voice-chat`, {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 if (res.ok) {
                     const audioResponseBlob = await res.blob();
                     const audioUrl = URL.createObjectURL(audioResponseBlob);
@@ -199,93 +786,231 @@
                     audioPlayer.style.display = 'block';
                     audioPlayer.play();
                     
-                    status.textContent = '✅ Respuesta recibida';
-                    status.className = 'status success';
-                    response.innerHTML = '<p><strong>🔊 Escucha la respuesta del asistente bancario</strong></p>';
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                    updateStats(elapsed);
                     
-                    const sender = formData.get('sender');
-                    await getMetadata(sender);
+                    updateStatus('✅ Respuesta recibida', 'success');
+                    
+                    // Get metadata
+                    await getMetadata(senderId);
                 } else {
-                    status.textContent = '❌ Error en la respuesta';
-                    status.className = 'status';
-                    response.textContent = 'Error: ' + res.statusText;
+                    updateStatus('❌ Error en la respuesta', 'error');
+                    addMessage('system', 'Error: ' + res.statusText);
                 }
             } catch (error) {
-                status.textContent = '❌ Error de conexión';
-                status.className = 'status';
-                response.textContent = 'Error: ' + error.message;
+                updateStatus('❌ Error de conexión', 'error');
+                addMessage('system', 'Error: ' + error.message);
                 console.error(error);
             }
         }
-
+        
+        // Get Metadata
         async function getMetadata(senderId) {
             try {
                 const res = await fetch(`${API_URL}/metadata/${senderId}`);
                 if (res.ok) {
                     const data = await res.json();
-                    metadata.style.display = 'block';
+                    
+                    // Display timings
+                    if (data.timings) {
+                        displayTimings(data.timings);
+                    }
+                    
+                    // Display entities
+                    if (data.rasa_full_response && data.rasa_full_response[1]) {
+                        const custom = data.rasa_full_response[1].custom;
+                        if (custom.entities) {
+                            displayEntities(custom.entities, custom.confidence);
+                        }
+                    }
+                    
+                    // Add to conversation
+                    const userText = data.user_audio_transcription || 'Audio';
+                    const botText = data.bot_text_cleaned || 'Sin respuesta';
+                    const confidence = data.rasa_full_response[1]?.custom?.confidence || 0;
+                    
+                    addMessage('user', userText);
+                    addMessage('bot', botText, confidence);
+                    
+                    // Update metadata
                     metadata.textContent = JSON.stringify(data, null, 2);
                 }
             } catch (error) {
                 console.error('Error obteniendo metadata:', error);
             }
         }
-
+        
+        // Text Message
         testBtn.addEventListener('click', async () => {
-            const message = prompt('Escribe tu consulta:', 'quiero consultar mi saldo de ahorros');
-            if (!message) return;
-
-            status.textContent = '⏳ Procesando...';
-            status.className = 'status processing';
+            const message = prompt('Escribe tu consulta:', 'crear contacto Freddy Pulido cédula 123456 cuenta de ahorros 789012');
+            if (message) {
+                await sendTextMessage(message);
+            }
+        });
+        
+        async function sendTextMessage(message) {
+            updateStatus('⏳ Procesando...', 'processing');
+            resetProgress();
+            
+            const startTime = Date.now();
+            const senderId = 'web_test_' + Date.now();
+            
+            activateStep(stepRasa);
             
             try {
                 const res = await fetch(`${API_URL}/text-only`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        sender: 'web_test_' + Date.now()
-                    })
+                    body: JSON.stringify({ message, sender: senderId })
                 });
-
+                
                 if (res.ok) {
                     const data = await res.json();
-                    status.textContent = '✅ Respuesta recibida';
-                    status.className = 'status success';
                     
-                    const rasaResp = data.rasa_response[0];
-                    response.innerHTML = `
-                        <p><strong>Tú:</strong> ${data.user_message}</p>
-                        <p><strong>Bot:</strong> ${rasaResp.text}</p>
-                    `;
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                    updateStats(elapsed);
                     
-                    if (data.rasa_response.length > 1) {
-                        metadata.style.display = 'block';
-                        metadata.textContent = JSON.stringify(data.rasa_response[1].custom, null, 2);
+                    updateStatus('✅ Respuesta recibida', 'success');
+                    
+                    // Display response
+                    const botText = data.rasa_response[0].text;
+                    const custom = data.rasa_response[1]?.custom;
+                    
+                    addMessage('user', message);
+                    addMessage('bot', botText, custom?.confidence);
+                    
+                    // Display entities
+                    if (custom?.entities) {
+                        displayEntities(custom.entities, custom.confidence);
                     }
+                    
+                    // Display timings (simulated for text)
+                    displayTimings({
+                        stt: 0,
+                        rasa: Number(elapsed),
+                        clean_tts: 0.0001
+                    });
+                    
+                    // Update metadata
+                    metadata.textContent = JSON.stringify(data, null, 2);
                 } else {
-                    status.textContent = '❌ Error';
-                    status.className = 'status';
-                    response.textContent = 'Error: ' + res.statusText;
+                    updateStatus('❌ Error', 'error');
+                    addMessage('system', 'Error: ' + res.statusText);
                 }
             } catch (error) {
-                status.textContent = '❌ Error de conexión';
-                status.className = 'status';
-                response.textContent = 'Error: ' + error.message;
+                updateStatus('❌ Error de conexión', 'error');
+                addMessage('system', 'Error: ' + error.message);
+            }
+        }
+        
+        // Display Functions
+        function displayTimings(timings) {
+            sttTime.textContent = timings.stt ? `${Number(timings.stt).toFixed(2)}s` : '0.00s';
+            rasaTime.textContent = timings.rasa ? `${Number(timings.rasa).toFixed(2)}s` : '-';
+            llmTime.textContent = timings.llm ? `${Number(timings.llm).toFixed(2)}s` : '~0.001s';
+            
+            // Mark as completed
+            [stepSTT, stepRasa, stepLLM].forEach(step => step.classList.remove('active'));
+            sttTime.classList.add('completed');
+            rasaTime.classList.add('completed');
+            llmTime.classList.add('completed');
+            
+            // Update total stat
+            const total = (timings.stt || 0) + (timings.rasa || 0) + (timings.llm || 0);
+            statTotal.textContent = `${total.toFixed(2)}s`;
+        }
+        
+        function displayEntities(entities, confidence) {
+            const validEntities = Object.entries(entities).filter(([_, value]) => value);
+            
+            if (validEntities.length === 0) {
+                entitiesContainer.style.display = 'none';
+                return;
+            }
+            
+            entitiesContainer.style.display = 'block';
+            
+            entityBadges.innerHTML = validEntities.map(([key, value]) => `
+                <span class="entity-badge" data-type="${key}">
+                    <strong>${key}:</strong> ${value}
+                </span>
+            `).join('');
+        }
+        
+        function addMessage(type, text, confidence = null) {
+            // Remove empty state
+            const emptyState = history.querySelector('.history-empty');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const time = new Date().toLocaleTimeString();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            let confidenceHTML = '';
+            if (confidence !== null && type === 'bot') {
+                const confPercent = (confidence * 100).toFixed(0);
+                const confClass = confidence > 0.9 ? 'high' : confidence > 0.7 ? 'medium' : 'low';
+                confidenceHTML = `
+                    <div class="message-confidence confidence-${confClass}">
+                        ✓ Confianza: ${confPercent}%
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = `
+                <span class="message-time">${time}</span>
+                <div class="message-text">${text}</div>
+                ${confidenceHTML}
+            `;
+            
+            history.appendChild(messageDiv);
+            history.scrollTop = history.scrollHeight;
+        }
+        
+        function updateStatus(text, className) {
+            status.textContent = text;
+            status.className = `status ${className}`;
+        }
+        
+        function resetProgress() {
+            [stepSTT, stepRasa, stepLLM].forEach(step => {
+                step.classList.remove('active');
+            });
+            [sttTime, rasaTime, llmTime].forEach(time => {
+                time.textContent = '-';
+                time.classList.remove('completed');
+            });
+        }
+        
+        function activateStep(step) {
+            step.classList.add('active');
+        }
+        
+        function updateStats(elapsed) {
+            requestCount++;
+            totalTime += parseFloat(elapsed);
+            
+            statRequests.textContent = requestCount;
+            statAvg.textContent = `${(totalTime / requestCount).toFixed(2)}s`;
+        }
+        
+        // Clear History
+        clearBtn.addEventListener('click', () => {
+            if (confirm('¿Limpiar todo el historial?')) {
+                history.innerHTML = '<div class="history-empty"><p>👋 Historial limpio</p></div>';
+                metadata.textContent = '';
+                entitiesContainer.style.display = 'none';
+                audioPlayer.style.display = 'none';
+                requestCount = 0;
+                totalTime = 0;
+                statRequests.textContent = '0';
+                statTotal.textContent = '-';
+                statAvg.textContent = '-';
+                resetProgress();
             }
         });
-
-        // Health check al cargar
-        fetch(`${API_URL}/health`)
-            .then(res => res.json())
-            .then(data => {
-                console.log('✅ Sistema healthy:', data);
-            })
-            .catch(err => {
-                status.textContent = '⚠️ Advertencia: API no responde';
-                status.className = 'status';
-                console.error(err);
-            });
     </script>
 </body>
 </html>
