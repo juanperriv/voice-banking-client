@@ -819,7 +819,7 @@
                     // Display entities
                     if (data.rasa_full_response && data.rasa_full_response[1]) {
                         const custom = data.rasa_full_response[1].custom;
-                        if (custom.entities) {
+                        if (custom && custom.entities) {
                             displayEntities(custom.entities, custom.confidence);
                         }
                     }
@@ -827,7 +827,9 @@
                     // Add to conversation
                     const userText = data.user_audio_transcription || 'Audio';
                     const botText = data.bot_text_cleaned || 'Sin respuesta';
-                    const confidence = data.rasa_full_response[1]?.custom?.confidence || 0;
+                    const confidence = data.rasa_full_response && data.rasa_full_response[1] 
+                        ? data.rasa_full_response[1].custom?.confidence || 0 
+                        : 0;
                     
                     addMessage('user', userText);
                     addMessage('bot', botText, confidence);
@@ -867,7 +869,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     
-                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                    const elapsed = parseFloat(((Date.now() - startTime) / 1000).toFixed(2));
                     updateStats(elapsed);
                     
                     updateStatus('✅ Respuesta recibida', 'success');
@@ -884,12 +886,13 @@
                         displayEntities(custom.entities, custom.confidence);
                     }
                     
-                    // Display timings (simulated for text)
-                    displayTimings({
+                    // Display timings - CORREGIDO
+                    const timingsData = data.timings || {
                         stt: 0,
-                        rasa: Number(elapsed),
+                        rasa: elapsed,
                         clean_tts: 0.0001
-                    });
+                    };
+                    displayTimings(timingsData);
                     
                     // Update metadata
                     metadata.textContent = JSON.stringify(data, null, 2);
@@ -905,9 +908,14 @@
         
         // Display Functions
         function displayTimings(timings) {
-            sttTime.textContent = timings.stt ? `${Number(timings.stt).toFixed(2)}s` : '0.00s';
-            rasaTime.textContent = timings.rasa ? `${Number(timings.rasa).toFixed(2)}s` : '-';
-            llmTime.textContent = timings.llm ? `${Number(timings.llm).toFixed(2)}s` : '~0.001s';
+            // Convertir a números (por si vienen como strings) - CORREGIDO
+            const sttVal = parseFloat(timings.stt) || 0;
+            const rasaVal = parseFloat(timings.rasa) || 0;
+            const llmVal = parseFloat(timings.llm) || parseFloat(timings.clean_tts) || 0;
+            
+            sttTime.textContent = sttVal > 0 ? `${sttVal.toFixed(2)}s` : '0.00s';
+            rasaTime.textContent = rasaVal > 0 ? `${rasaVal.toFixed(2)}s` : '-';
+            llmTime.textContent = llmVal > 0 ? `${llmVal.toFixed(3)}s` : '~0.001s';
             
             // Mark as completed
             [stepSTT, stepRasa, stepLLM].forEach(step => step.classList.remove('active'));
@@ -916,8 +924,8 @@
             llmTime.classList.add('completed');
             
             // Update total stat
-            const total = (timings.stt || 0) + (timings.rasa || 0) + (timings.llm || 0);
-            statTotal.textContent = `${total.toFixed(2)}s`;
+            const total = sttVal + rasaVal + llmVal;
+            statTotal.textContent = total > 0 ? `${total.toFixed(2)}s` : '-';
         }
         
         function displayEntities(entities, confidence) {
